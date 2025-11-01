@@ -12,6 +12,7 @@ import { PlusCircle, Trash2 } from "lucide-react";
 import { calculatePrice, calculateMOQ } from "@/lib/calculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   rows: z.array(z.object({
@@ -44,10 +45,16 @@ export function PriceCalculatorForm() {
     control: form.control,
   });
 
-  const totalPrice = watchedValues.rows?.reduce((acc, row) => {
+  const total = watchedValues.rows?.reduce((acc, row) => {
     const price = calculatePrice({ ...row, diskon: row.diskon ?? 0 });
-    return acc + (isNaN(price) ? 0 : price);
-  }, 0) ?? 0;
+    if (price === null) {
+      acc.hasError = true;
+    } else {
+      acc.totalPrice += price;
+    }
+    return acc;
+  }, { totalPrice: 0, hasError: false }) ?? { totalPrice: 0, hasError: false };
+
 
   return (
     <Form {...form}>
@@ -66,6 +73,7 @@ export function PriceCalculatorForm() {
             const rowValues = watchedValues.rows?.[index];
             const rowPrice = rowValues ? calculatePrice({ ...rowValues, diskon: rowValues.diskon ?? 0 }) : 0;
             const rowMOQ = rowValues ? calculateMOQ({ ...rowValues }) : 0;
+            const isPriceNotFound = rowPrice === null;
 
             return (
               <div key={field.id} className="grid grid-cols-[1.5fr_1.5fr_2.5fr_1fr_1fr_2fr_1fr] gap-x-4 items-start bg-accent/20 dark:bg-accent/10 p-2 rounded-lg">
@@ -74,7 +82,15 @@ export function PriceCalculatorForm() {
                 <FormField control={form.control} name={`rows.${index}.substance`} render={({ field }) => <FormItem><FormControl><Input {...field} placeholder="K125/M125/K125" /></FormControl><FormMessage/></FormItem>} />
                 <FormField control={form.control} name={`rows.${index}.flute`} render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        const paperWeights = (form.getValues(`rows.${index}.substance`)).split('/').length;
+                        if (value === 'BC' && paperWeights < 5) {
+                            form.setValue(`rows.${index}.substance`, 'M100/M100/M100/M100/M100');
+                        } else if (['B', 'C'].includes(value) && paperWeights > 3) {
+                            form.setValue(`rows.${index}.substance`, 'M100/M100/M100');
+                        }
+                    }} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent>{fluteOptions.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                     </Select>
@@ -83,8 +99,14 @@ export function PriceCalculatorForm() {
                 <FormField control={form.control} name={`rows.${index}.diskon`} render={({ field }) => <FormItem><FormControl><Input {...field} type="number" placeholder="0" /></FormControl><FormMessage/></FormItem>} />
                 
                 <div className="h-10 flex flex-col items-end justify-center font-mono text-foreground">
-                  <span className="text-base">{isNaN(rowPrice) ? 'Rp 0' : currencyFormatter.format(rowPrice)}</span>
-                  <span className="text-xs text-muted-foreground">{isFinite(rowMOQ) ? `${rowMOQ.toLocaleString()} pcs` : 'N/A'}</span>
+                    {isPriceNotFound ? (
+                         <span className="text-xs text-destructive text-right">Not Found</span>
+                    ) : (
+                        <>
+                            <span className="text-base">{currencyFormatter.format(rowPrice ?? 0)}</span>
+                            <span className="text-xs text-muted-foreground">{isFinite(rowMOQ) ? `${rowMOQ.toLocaleString()} pcs` : 'N/A'}</span>
+                        </>
+                    )}
                 </div>
 
                 <div className="flex items-center justify-end">
@@ -97,11 +119,19 @@ export function PriceCalculatorForm() {
           })}
         </div>
 
-        <Button type="button" variant="outline" size="sm" onClick={() => append({ panjang: 0, lebar: 0, substance: "K125/M125/K125", flute: "B", diskon: 0 })}>
+        <Button type="button" variant="outline" size="sm" onClick={() => append({ panjang: 0, lebar: 0, substance: "M100/M100/M100", flute: "B", diskon: 0 })}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Row
         </Button>
         
         <Separator />
+
+        {total.hasError && (
+             <Alert variant="destructive">
+                <AlertDescription>
+                    One or more items were not found in the price list. Please contact admin for assistance. The total shown below may be incorrect.
+                </AlertDescription>
+            </Alert>
+        )}
 
         <div className="flex justify-end">
             <Card className="w-full max-w-sm bg-background">
@@ -110,7 +140,7 @@ export function PriceCalculatorForm() {
                 </CardHeader>
                 <CardContent>
                     <p className="text-4xl font-bold font-mono text-primary tracking-tight">
-                        {currencyFormatter.format(totalPrice)}
+                        {currencyFormatter.format(total.totalPrice)}
                     </p>
                 </CardContent>
             </Card>

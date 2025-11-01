@@ -29,7 +29,7 @@ export function TonnageCalculatorForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      rows: [{ panjang: 0, lebar: 0, substance: "", flute: "B", quantity: 0 }],
+      rows: [{ panjang: 0, lebar: 0, substance: "125/110/125", flute: "B", quantity: 0 }],
     },
   });
 
@@ -58,7 +58,7 @@ export function TonnageCalculatorForm() {
             <span>Substance</span>
             <span>Flute</span>
             <span>Quantity</span>
-            <span className="text-right">Weight</span>
+            <span className="text-right">Weight (tonnes)</span>
             <span></span>
           </div>
           {fields.map((field, index) => {
@@ -74,11 +74,13 @@ export function TonnageCalculatorForm() {
                   <FormItem>
                     <Select onValueChange={(value) => {
                         field.onChange(value);
-                        const paperWeights = (form.getValues(`rows.${index}.substance`)).split('/').length;
-                        if (value === 'BC' && paperWeights < 5) {
-                            form.setValue(`rows.${index}.substance`, '150/120/110/120/150');
-                        } else if (['B', 'C'].includes(value) && paperWeights > 3) {
-                            form.setValue(`rows.${index}.substance`, '125/110/125');
+                        const currentSubstance = form.getValues(`rows.${index}.substance`);
+                        const paperWeights = currentSubstance ? currentSubstance.split('/').length : 0;
+                        
+                        if (value === 'BC' && paperWeights !== 5) {
+                            form.setValue(`rows.${index}.substance`, 'M100/M100/M100/M100/M100');
+                        } else if (['B', 'C'].includes(value) && paperWeights !== 3) {
+                            form.setValue(`rows.${index}.substance`, 'M100/M100/M100');
                         }
                     }} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
@@ -125,3 +127,5 @@ export function TonnageCalculatorForm() {
     </Form>
   );
 }
+
+    
