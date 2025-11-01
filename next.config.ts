@@ -3,6 +3,7 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
+  basePath: '/carton-sheet-calc',
   typescript: {
     ignoreBuildErrors: true,
   },
