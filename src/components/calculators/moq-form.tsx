@@ -47,7 +47,7 @@ export function MoqCalculatorForm() {
           </div>
           {fields.map((field, index) => {
             const rowValues = watchedValues.rows?.[index];
-            const rowMOQ = rowValues ? calculateMOQ({ ...rowValues }) : 0;
+            const rowMOQ = rowValues && rowValues.panjang && rowValues.lebar ? calculateMOQ({ ...rowValues }) : 0;
 
             return (
               <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_80px] gap-x-4 items-start bg-accent/20 dark:bg-accent/10 p-2 rounded-lg">
