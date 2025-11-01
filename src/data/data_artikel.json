@@ -1,0 +1,59 @@
+
+[
+  {
+    "id": "A001",
+    "nama_artikel": "Standard Box B-Flute",
+    "panjang_sheet": 1200,
+    "lebar_sheet": 800,
+    "substance": "125/110/125",
+    "flute": "B"
+  },
+  {
+    "id": "A002",
+    "nama_artikel": "Heavy Duty Box BC-Flute",
+    "panjang_sheet": 2000,
+    "lebar_sheet": 1500,
+    "substance": "150/120/110/120/150",
+    "flute": "BC"
+  },
+  {
+    "id": "A003",
+    "nama_artikel": "Small E-Flute Shipper",
+    "panjang_sheet": 600,
+    "lebar_sheet": 400,
+    "substance": "125/110/125",
+    "flute": "E"
+  },
+  {
+    "id": "A004",
+    "nama_artikel": "Medium C-Flute Container",
+    "panjang_sheet": 1500,
+    "lebar_sheet": 1000,
+    "substance": "140/120/140",
+    "flute": "C"
+  },
+  {
+    "id": "A005",
+    "nama_artikel": "Lightweight BE-Flute Pad",
+    "panjang_sheet": 1000,
+    "lebar_sheet": 1000,
+    "substance": "110/100/100/100/110",
+    "flute": "BE"
+  },
+  {
+    "id": "A006",
+    "nama_artikel": "Single Face B-Flute Roll",
+    "panjang_sheet": 5000,
+    "lebar_sheet": 1200,
+    "substance": "125/110",
+    "flute": "B"
+  },
+  {
+    "id": "A007",
+    "nama_artikel": "Premium White Top B-Flute",
+    "panjang_sheet": 1350,
+    "lebar_sheet": 950,
+    "substance": "150K/120/140",
+    "flute": "B"
+  }
+]
