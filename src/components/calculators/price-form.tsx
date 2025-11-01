@@ -158,7 +158,7 @@ export function PriceCalculatorForm() {
             <CollapsibleTrigger asChild>
                 <Button type="button" variant="secondary">
                     <Calculator className="mr-2 h-4 w-4"/>
-                    Simulasi Harga Total
+                    Simulasi Total Harga (Base on QTY Order)
                 </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
