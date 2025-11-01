@@ -110,13 +110,11 @@ const priceList: Record<string, Record<string, number>> = {
     "K135/M125/K135": {"Flute_B": 4258, "Flute_C": 4374},
     "K135/M125/M100": {"Flute_B": 3842, "Flute_C": 3958},
     "K200/M135/K135": {"Flute_B": 5020, "Flute_C": 5145},
-    "K200/M125/K150": {"Flute_B": 5029, "Flute_C": 5144},
     "K200/M135/K200": {"Flute_B": 5651, "Flute_C": 5775},
-    "K275/M135/K200": {"Flute_B": 6462, "Flute_C": 6584},
+    "K275/M135/K200": {"Flute_B": 6413, "Flute_C": 6536},
     "K275/M135/K275": {"Flute_B": 7199, "Flute_C": 7321},
     "K150/M135/K135": {"Flute_B": 4529, "Flute_C": 4655},
     "K200/M135/K150": {"Flute_B": 5159, "Flute_C": 5284},
-    "K275/M135/K200": {"Flute_B": 6413, "Flute_C": 6536},
     "K150/M100/K135": {"Flute_B": 4098, "Flute_C": 4215},
     "K275/K200/K275": {"Flute_B": 8289, "Flute_C": 8487},
     "WK140/M125/K110": {"Flute_B": 4452, "Flute_C": 4543},
@@ -154,7 +152,6 @@ const priceList: Record<string, Record<string, number>> = {
     "WK200/M100/K275": {"Flute_B": 6841, "Flute_C": 6936},
     "WK200/M100/WK150": {"Flute_B": 5980, "Flute_C": 6079},
     "WK200/M100/WK200": {"Flute_B": 6540, "Flute_C": 6639},
-    "WK140/M100/M100": {"Flute_B": 3973, "Flute_C": 4065},
     "WK140/M100/K125": {"Flute_B": 4314, "Flute_C": 4405},
     "WK140/M100/K200": {"Flute_B": 5123, "Flute_C": 5210},
     "WK140/M100/K275": {"Flute_B": 6167, "Flute_C": 6248},
@@ -347,6 +344,5 @@ export const calculateMOQ = ({
     const moq = Math.ceil((500000 / panjang) * out);
     return moq;
 };
-
-
+    
     
