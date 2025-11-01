@@ -116,7 +116,6 @@ const priceList: Record<string, Record<string, number>> = {
     "K275/M135/K275": {"Flute_B": 7199, "Flute_C": 7321},
     "K150/M135/K135": {"Flute_B": 4529, "Flute_C": 4655},
     "K200/M135/K150": {"Flute_B": 5159, "Flute_C": 5284},
-    "K200/M135/K135": {"Flute_B": 5014, "Flute_C": 5139},
     "K275/M135/K200": {"Flute_B": 6413, "Flute_C": 6536},
     "K150/M100/K135": {"Flute_B": 4098, "Flute_C": 4215},
     "K275/K200/K275": {"Flute_B": 8289, "Flute_C": 8487},
