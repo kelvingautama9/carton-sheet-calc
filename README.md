@@ -1,5 +1,4 @@
-# Firebase Studio
+# Web Page for calculate price, moq, weight carton sheet
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+This is a NextJS starter
+Develop by KelvinGautama
