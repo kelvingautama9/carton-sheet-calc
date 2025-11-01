@@ -1,18 +1,20 @@
 
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import * as React from "react";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Calculator } from "lucide-react";
 import { calculatePrice, calculateMOQ } from "@/lib/calculations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const formSchema = z.object({
   rows: z.array(z.object({
@@ -24,12 +26,14 @@ const formSchema = z.object({
   })),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const currencyFormatter = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
 const fluteOptions = ["B", "C", "BC"];
 
 
 export function PriceCalculatorForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       rows: [{ panjang: 0, lebar: 0, substance: "K125/M125/K125", flute: "B", diskon: 0 }],
@@ -42,17 +46,36 @@ export function PriceCalculatorForm() {
   });
 
   const watchedRows = form.watch('rows');
+  const [simulationData, setSimulationData] = React.useState<Record<number, { qty: number; total: number }>>({});
+  const [isSimulating, setIsSimulating] = React.useState(false);
 
-  const total = watchedRows?.reduce((acc, row) => {
-    const price = calculatePrice({ ...row, diskon: row.diskon ?? 0 });
-    if (price === null) {
-      acc.hasError = true;
+  const hasPriceError = watchedRows.some(row => calculatePrice({ ...row, diskon: row.diskon ?? 0 }) === null);
+
+  const handleSimulationQtyChange = (index: number, value: string) => {
+    const qty = parseInt(value) || 0;
+    const rowData = watchedRows[index];
+    const pricePerPcs = calculatePrice({ ...rowData, diskon: rowData.diskon ?? 0 });
+    const moq = calculateMOQ(rowData);
+
+    if (pricePerPcs !== null && qty >= moq) {
+      setSimulationData(prev => ({
+        ...prev,
+        [index]: { qty, total: qty * pricePerPcs }
+      }));
     } else {
-      acc.totalPrice += price;
+        setSimulationData(prev => {
+            const newState = {...prev};
+            if(newState[index]) {
+                newState[index] = {...newState[index], qty: qty, total: 0};
+            } else {
+                 newState[index] = { qty: qty, total: 0 };
+            }
+            return newState;
+        });
     }
-    return acc;
-  }, { totalPrice: 0, hasError: false }) ?? { totalPrice: 0, hasError: false };
+  };
 
+  const grandTotal = Object.values(simulationData).reduce((acc, curr) => acc + curr.total, 0);
 
   return (
     <Form {...form}>
@@ -123,7 +146,7 @@ export function PriceCalculatorForm() {
         
         <Separator />
 
-        {total.hasError && (
+        {hasPriceError && (
              <Alert variant="destructive">
                 <AlertDescription>
                     One or more items were not found in the price list. Please contact admin for assistance. The total shown below may be incorrect.
@@ -131,18 +154,61 @@ export function PriceCalculatorForm() {
             </Alert>
         )}
 
-        <div className="flex justify-end">
-            <Card className="w-full max-w-sm bg-background">
-                <CardHeader>
-                    <CardTitle className="text-lg">Total Estimated Price</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-4xl font-bold font-mono text-primary tracking-tight">
-                        {currencyFormatter.format(total.totalPrice)}
-                    </p>
-                </CardContent>
-            </Card>
-        </div>
+        <Collapsible open={isSimulating} onOpenChange={setIsSimulating}>
+            <CollapsibleTrigger asChild>
+                <Button type="button" variant="secondary">
+                    <Calculator className="mr-2 h-4 w-4"/>
+                    Simulasi Harga Total
+                </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+                <div className="grid md:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Order Breakdown</CardTitle>
+                            <CardDescription>Masukkan kuantitas pesanan untuk setiap item di bawah ini.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {watchedRows.map((row, index) => {
+                                const moq = calculateMOQ(row);
+                                const isQtyInvalid = simulationData[index]?.qty > 0 && simulationData[index]?.qty < moq;
+                                const itemTotal = simulationData[index]?.total ?? 0;
+
+                                return (
+                                    <div key={index} className="space-y-2">
+                                        <div className="flex justify-between items-center gap-4">
+                                            <p className="text-sm font-medium flex-1">
+                                                {`${row.panjang || 0}x${row.lebar || 0} (${row.substance || 'N/A'}) ${row.flute || ''}`}
+                                            </p>
+                                            <Input
+                                                type="number"
+                                                placeholder={`min. ${moq.toLocaleString()}`}
+                                                className={`w-32 ${isQtyInvalid ? 'border-destructive' : ''}`}
+                                                value={simulationData[index]?.qty || ''}
+                                                onChange={(e) => handleSimulationQtyChange(index, e.target.value)}
+                                            />
+                                        </div>
+                                        {isQtyInvalid && <p className="text-xs text-destructive text-right w-full">Order harus di atas MOQ ({moq.toLocaleString()} pcs)</p>}
+                                        <p className="text-right font-mono text-primary text-lg font-semibold">{currencyFormatter.format(itemTotal)}</p>
+                                        {index < watchedRows.length - 1 && <Separator className="mt-2"/>}
+                                    </div>
+                                )
+                            })}
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-background sticky top-4">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Total Estimated Price (exc tax)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-4xl font-bold font-mono text-primary tracking-tight">
+                                {currencyFormatter.format(grandTotal)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
       </form>
     </Form>
   );
