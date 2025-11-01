@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
@@ -41,11 +41,9 @@ export function PriceCalculatorForm() {
     name: "rows",
   });
 
-  const watchedValues = useWatch({
-    control: form.control,
-  });
+  const watchedRows = form.watch('rows');
 
-  const total = watchedValues.rows?.reduce((acc, row) => {
+  const total = watchedRows?.reduce((acc, row) => {
     const price = calculatePrice({ ...row, diskon: row.diskon ?? 0 });
     if (price === null) {
       acc.hasError = true;
@@ -70,7 +68,7 @@ export function PriceCalculatorForm() {
             <span></span>
           </div>
           {fields.map((field, index) => {
-            const rowValues = watchedValues.rows?.[index];
+            const rowValues = watchedRows?.[index];
             const rowPrice = rowValues ? calculatePrice({ ...rowValues, diskon: rowValues.diskon ?? 0 }) : 0;
             const rowMOQ = rowValues ? calculateMOQ({ ...rowValues }) : 0;
             const isPriceNotFound = rowPrice === null;
@@ -149,4 +147,3 @@ export function PriceCalculatorForm() {
     </Form>
   );
 }
-
