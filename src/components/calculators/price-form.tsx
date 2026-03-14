@@ -1,16 +1,15 @@
-
 "use client";
 
 import * as React from "react";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Calculator } from "lucide-react";
-import { calculatePrice, calculateMOQ } from "@/lib/calculations";
+import { PlusCircle, Trash2, Calculator, Weight } from "lucide-react";
+import { calculatePrice, calculateMOQ, calculateTonnage } from "@/lib/calculations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,7 +45,7 @@ export function PriceCalculatorForm() {
   });
 
   const watchedRows = form.watch('rows');
-  const [simulationData, setSimulationData] = React.useState<Record<number, { qty: number; total: number }>>({});
+  const [simulationData, setSimulationData] = React.useState<Record<number, { qty: number; total: number; totalWeight: number }>>({});
   const [isSimulating, setIsSimulating] = React.useState(false);
 
   const hasPriceError = watchedRows.some(row => calculatePrice({ ...row, diskon: row.diskon ?? 0 }) === null);
@@ -56,19 +55,24 @@ export function PriceCalculatorForm() {
     const rowData = watchedRows[index];
     const pricePerPcs = calculatePrice({ ...rowData, diskon: rowData.diskon ?? 0 });
     const moq = calculateMOQ(rowData);
+    const weightPerPcs = calculateTonnage({ ...rowData, quantity: 1 });
 
     if (pricePerPcs !== null && qty >= moq) {
       setSimulationData(prev => ({
         ...prev,
-        [index]: { qty, total: qty * pricePerPcs }
+        [index]: { 
+            qty, 
+            total: qty * pricePerPcs,
+            totalWeight: qty * weightPerPcs
+        }
       }));
     } else {
         setSimulationData(prev => {
             const newState = {...prev};
             if(newState[index]) {
-                newState[index] = {...newState[index], qty: qty, total: 0};
+                newState[index] = { qty, total: 0, totalWeight: 0 };
             } else {
-                 newState[index] = { qty: qty, total: 0 };
+                 newState[index] = { qty, total: 0, totalWeight: 0 };
             }
             return newState;
         });
@@ -76,6 +80,7 @@ export function PriceCalculatorForm() {
   };
 
   const grandTotal = Object.values(simulationData).reduce((acc, curr) => acc + curr.total, 0);
+  const grandTotalWeight = Object.values(simulationData).reduce((acc, curr) => acc + curr.totalWeight, 0);
 
   return (
     <Form {...form}>
@@ -171,39 +176,70 @@ export function PriceCalculatorForm() {
                         <CardContent className="space-y-4">
                             {watchedRows.map((row, index) => {
                                 const moq = calculateMOQ(row);
+                                const weightPerPcs = calculateTonnage({ ...row, quantity: 1 });
                                 const isQtyInvalid = simulationData[index]?.qty > 0 && simulationData[index]?.qty < moq;
                                 const itemTotal = simulationData[index]?.total ?? 0;
+                                const itemTotalWeight = simulationData[index]?.totalWeight ?? 0;
 
                                 return (
-                                    <div key={index} className="space-y-2">
-                                        <div className="flex justify-between items-center gap-4">
-                                            <p className="text-sm font-medium flex-1">
-                                                {`${row.panjang || 0}x${row.lebar || 0} (${row.substance || 'N/A'}) ${row.flute || ''}`}
-                                            </p>
-                                            <Input
-                                                type="number"
-                                                placeholder={`min. ${moq.toLocaleString()}`}
-                                                className={`w-32 ${isQtyInvalid ? 'border-destructive' : ''}`}
-                                                value={simulationData[index]?.qty || ''}
-                                                onChange={(e) => handleSimulationQtyChange(index, e.target.value)}
-                                            />
+                                    <div key={index} className="space-y-3">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-foreground">
+                                                    {`${row.panjang || 0}x${row.lebar || 0} (${row.substance || 'N/A'}) ${row.flute || ''}`}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-mono">
+                                                    <Weight className="h-3 w-3" />
+                                                    <span>{weightPerPcs.toFixed(4)} kg/pcs</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <Input
+                                                    type="number"
+                                                    placeholder={`min. ${moq.toLocaleString()}`}
+                                                    className={`w-32 h-8 text-sm ${isQtyInvalid ? 'border-destructive' : ''}`}
+                                                    value={simulationData[index]?.qty || ''}
+                                                    onChange={(e) => handleSimulationQtyChange(index, e.target.value)}
+                                                />
+                                                {isQtyInvalid && <p className="text-[10px] text-destructive">Min. {moq.toLocaleString()} pcs</p>}
+                                            </div>
                                         </div>
-                                        {isQtyInvalid && <p className="text-xs text-destructive text-right w-full">Order harus di atas MOQ ({moq.toLocaleString()} pcs)</p>}
-                                        <p className="text-right font-mono text-primary text-lg font-semibold">{currencyFormatter.format(itemTotal)}</p>
-                                        {index < watchedRows.length - 1 && <Separator className="mt-2"/>}
+                                        
+                                        <div className="flex justify-between items-end bg-muted/30 p-2 rounded-md">
+                                            <div className="text-xs text-muted-foreground">
+                                                <p>Est. Weight</p>
+                                                <p className="font-mono text-foreground">{itemTotalWeight.toFixed(3)} tonnes</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs text-muted-foreground">Subtotal</p>
+                                                <p className="font-mono text-primary font-bold">{currencyFormatter.format(itemTotal)}</p>
+                                            </div>
+                                        </div>
+                                        {index < watchedRows.length - 1 && <Separator className="mt-2 opacity-50"/>}
                                     </div>
                                 )
                             })}
                         </CardContent>
                     </Card>
-                    <Card className="bg-background sticky top-4">
+                    <Card className="bg-background sticky top-4 h-fit">
                         <CardHeader>
-                            <CardTitle className="text-lg">Total Estimated Price (exc tax)</CardTitle>
+                            <CardTitle className="text-lg">Total Summary (exc tax)</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold font-mono text-primary tracking-tight">
-                                {currencyFormatter.format(grandTotal)}
-                            </p>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Total Estimated Price</p>
+                                <p className="text-4xl font-bold font-mono text-primary tracking-tight">
+                                    {currencyFormatter.format(grandTotal)}
+                                </p>
+                            </div>
+                            <Separator />
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Total Estimated Weight</p>
+                                <p className="text-3xl font-bold font-mono text-foreground tracking-tight">
+                                    {grandTotalWeight.toFixed(4)}
+                                    <span className="text-base ml-2 font-sans font-medium text-muted-foreground">tonnes</span>
+                                </p>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
