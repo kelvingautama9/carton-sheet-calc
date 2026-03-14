@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -6,11 +7,11 @@ import Link from "next/link";
 import { ArrowRight, Calculator, Package, Table, Weight } from 'lucide-react';
 
 export default function Home() {
-  const heroImage = PlaceHolderImages.find(p => p.id === "hero-factory");
+  const heroImage = PlaceHolderImages.find(p => p.id === "hero-header");
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-      <div className="relative w-full h-72 md:h-80 rounded-xl overflow-hidden">
+      <div className="relative w-full h-72 md:h-80 rounded-xl overflow-hidden shadow-2xl shadow-primary/10">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -21,10 +22,12 @@ export default function Home() {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
         <div className="absolute bottom-0 left-0 p-6 md:p-8">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground">Vinns Carton Sheet Calculator</h1>
-            <p className="mt-2 text-md md:text-lg text-muted-foreground max-w-2xl">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-foreground drop-shadow-md">
+                Vinns <span className="text-primary">Carton Sheet</span> Calculator
+            </h1>
+            <p className="mt-2 text-md md:text-lg text-muted-foreground max-w-2xl font-medium">
                 Your all-in-one toolkit for carton sheet calculations. Streamline your workflow with our precise and easy-to-use calculators.
             </p>
         </div>
