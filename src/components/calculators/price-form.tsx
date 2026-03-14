@@ -55,7 +55,7 @@ export function PriceCalculatorForm() {
     const rowData = watchedRows[index];
     const pricePerPcs = calculatePrice({ ...rowData, diskon: rowData.diskon ?? 0 });
     const moq = calculateMOQ(rowData);
-    const weightPerPcs = calculateTonnage({ ...rowData, quantity: 1 });
+    const weightPerPcsInTonnes = calculateTonnage({ ...rowData, quantity: 1 });
 
     if (pricePerPcs !== null && qty >= moq) {
       setSimulationData(prev => ({
@@ -63,17 +63,13 @@ export function PriceCalculatorForm() {
         [index]: { 
             qty, 
             total: qty * pricePerPcs,
-            totalWeight: qty * weightPerPcs
+            totalWeight: qty * weightPerPcsInTonnes
         }
       }));
     } else {
         setSimulationData(prev => {
             const newState = {...prev};
-            if(newState[index]) {
-                newState[index] = { qty, total: 0, totalWeight: 0 };
-            } else {
-                 newState[index] = { qty, total: 0, totalWeight: 0 };
-            }
+            newState[index] = { qty, total: 0, totalWeight: 0 };
             return newState;
         });
     }
@@ -176,7 +172,8 @@ export function PriceCalculatorForm() {
                         <CardContent className="space-y-4">
                             {watchedRows.map((row, index) => {
                                 const moq = calculateMOQ(row);
-                                const weightPerPcs = calculateTonnage({ ...row, quantity: 1 });
+                                // calculateTonnage returns tonnes, multiply by 1000 to get kg
+                                const weightPerPcsInKg = calculateTonnage({ ...row, quantity: 1 }) * 1000;
                                 const isQtyInvalid = simulationData[index]?.qty > 0 && simulationData[index]?.qty < moq;
                                 const itemTotal = simulationData[index]?.total ?? 0;
                                 const itemTotalWeight = simulationData[index]?.totalWeight ?? 0;
@@ -190,7 +187,7 @@ export function PriceCalculatorForm() {
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-mono">
                                                     <Weight className="h-3 w-3" />
-                                                    <span>{weightPerPcs.toFixed(4)} kg/pcs</span>
+                                                    <span>{weightPerPcsInKg.toFixed(4)} kg/pcs</span>
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
