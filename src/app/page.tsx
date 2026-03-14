@@ -20,6 +20,9 @@ export default function Home() {
                 <p className="text-md md:text-xl text-foreground font-semibold leading-relaxed mb-2">
                     The smartest and fastest BTB carton sheet calculator website
                 </p>
+                <p className="text-sm md:text-lg text-foreground/80 font-medium mb-4">
+                    Accessible anytime, anywhere—fast and easy to use
+                </p>
                 <p className="text-sm text-muted-foreground font-medium italic">
                     Developed by Vinns
                 </p>
