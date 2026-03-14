@@ -1,36 +1,27 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Calculator, Package, Table, Weight } from 'lucide-react';
 
 export default function Home() {
-  const heroImage = PlaceHolderImages.find(p => p.id === "hero-header");
-
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-      <div className="relative w-full h-72 md:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 border border-border/50">
-        {heroImage && (
-          <Image
-            src={heroImage.imageUrl}
-            alt={heroImage.description}
-            fill
-            className="object-cover"
-            data-ai-hint={heroImage.imageHint}
-            priority
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full">
+      <div className="relative w-full h-72 md:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 border border-border/50 bg-gradient-to-br from-primary/10 via-background to-accent/5 flex items-center">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -ml-32 -mb-32" />
+        
+        <div className="relative z-10 p-8 md:p-12 w-full">
             <div className="max-w-3xl">
                 <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground drop-shadow-xl mb-4">
                     Vinns <span className="text-primary italic">Carton Sheet</span> <br/>
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Calculator</span>
                 </h1>
-                <p className="text-md md:text-xl text-muted-foreground max-w-2xl font-medium leading-relaxed">
-                    Solusi perhitungan cerdas untuk industri karton sheet. Cepat, tepat, dan futuristik untuk efisiensi produksi Anda.
+                <p className="text-md md:text-xl text-foreground font-semibold leading-relaxed mb-2">
+                    The smartest and fastest BTB carton sheet calculator website
+                </p>
+                <p className="text-sm text-muted-foreground font-medium italic">
+                    Developed by Vinns
                 </p>
             </div>
         </div>
