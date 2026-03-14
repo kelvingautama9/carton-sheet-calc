@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Weight } from "lucide-react";
 import { calculateTonnage } from "@/lib/calculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -29,7 +29,7 @@ export function TonnageCalculatorForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      rows: [{ panjang: 0, lebar: 0, substance: "", flute: "B", quantity: 0 }],
+      rows: [{ panjang: 0, lebar: 0, substance: "M100/M100/M100", flute: "B", quantity: 0 }],
     },
   });
 
@@ -54,13 +54,13 @@ export function TonnageCalculatorForm() {
     return acc + (isNaN(tonnage) ? 0 : tonnage);
   }, 0);
 
-  const gridLayout = "grid-cols-2 md:grid-cols-[1.2fr_1.2fr_2fr_0.8fr_1fr_1.5fr_48px]";
+  const gridLayout = "grid-cols-2 md:grid-cols-[1.2fr_1.2fr_2fr_0.8fr_1fr_1.8fr_48px]";
 
   return (
     <Form {...form}>
       <form className="space-y-6">
         <div className="space-y-2">
-          {/* Header Desktop */}
+          {/* Header Desktop - Disinkronkan dengan Row */}
           <div className={cn("hidden md:grid gap-4 px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/70", gridLayout)}>
             <span>Length</span>
             <span>Width</span>
@@ -81,6 +81,14 @@ export function TonnageCalculatorForm() {
                 flute: rowValues?.flute || "B",
                 quantity: Number(rowValues?.quantity) || 0
               });
+              
+              const weightPerPcsInKg = calculateTonnage({
+                panjang: Number(rowValues?.panjang) || 0,
+                lebar: Number(rowValues?.lebar) || 0,
+                substance: rowValues?.substance || "",
+                flute: rowValues?.flute || "B",
+                quantity: 1
+              }) * 1000;
 
               return (
                 <div key={field.id} className={cn("relative grid gap-3 md:gap-4 items-start bg-accent/10 md:bg-transparent p-4 md:px-4 md:py-1 rounded-lg border md:border-none border-border/50", gridLayout)}>
@@ -97,7 +105,7 @@ export function TonnageCalculatorForm() {
                   <FormField control={form.control} name={`rows.${index}.panjang`} render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="md:hidden text-xs text-muted-foreground">Length (mm)</FormLabel>
-                      <FormControl><Input {...field} type="number" placeholder="Length" className="h-9" /></FormControl>
+                      <FormControl><Input {...field} type="number" placeholder="Length" className="h-9 focus-visible:ring-primary/30" /></FormControl>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
                   )} />
@@ -105,7 +113,7 @@ export function TonnageCalculatorForm() {
                   <FormField control={form.control} name={`rows.${index}.lebar`} render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="md:hidden text-xs text-muted-foreground">Width (mm)</FormLabel>
-                      <FormControl><Input {...field} type="number" placeholder="Width" className="h-9" /></FormControl>
+                      <FormControl><Input {...field} type="number" placeholder="Width" className="h-9 focus-visible:ring-primary/30" /></FormControl>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
                   )} />
@@ -113,7 +121,7 @@ export function TonnageCalculatorForm() {
                   <FormField control={form.control} name={`rows.${index}.substance`} render={({ field }) => (
                     <FormItem className="col-span-2 md:col-span-1 space-y-1">
                       <FormLabel className="md:hidden text-xs text-muted-foreground">Substance</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g. K125/M125/K125" className="h-9" /></FormControl>
+                      <FormControl><Input {...field} placeholder="e.g. K125/M125/K125" className="h-9 focus-visible:ring-primary/30" /></FormControl>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
                   )} />
@@ -125,13 +133,13 @@ export function TonnageCalculatorForm() {
                           field.onChange(value);
                           const currentSubstance = form.getValues(`rows.${index}.substance`);
                           const paperWeights = currentSubstance ? currentSubstance.split('/').length : 0;
-                          if (value === 'BC' && paperWeights !== 5) {
+                          if (value === 'BC' && paperWeights < 5) {
                               form.setValue(`rows.${index}.substance`, 'M100/M100/M100/M100/M100');
-                          } else if (['B', 'C'].includes(value) && paperWeights !== 3) {
+                          } else if (['B', 'C'].includes(value) && paperWeights > 3) {
                               form.setValue(`rows.${index}.substance`, 'M100/M100/M100');
                           }
                       }} defaultValue={field.value}>
-                        <FormControl><SelectTrigger className="h-9"><SelectValue /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-9 focus:ring-primary/30"><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>{fluteOptions.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                       </Select>
                     </FormItem>
@@ -140,17 +148,23 @@ export function TonnageCalculatorForm() {
                   <FormField control={form.control} name={`rows.${index}.quantity`} render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="md:hidden text-xs text-muted-foreground">Quantity</FormLabel>
-                      <FormControl><Input {...field} type="number" placeholder="Qty" className="h-9" /></FormControl>
+                      <FormControl><Input {...field} type="number" placeholder="Qty" className="h-9 focus-visible:ring-primary/30" /></FormControl>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
                   )} />
                   
                   <div className="col-span-2 md:col-span-1 h-auto md:h-9 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center font-mono text-foreground bg-primary/5 md:bg-transparent p-2 md:p-0 rounded md:rounded-none">
                     <span className="md:hidden text-xs text-muted-foreground font-sans tracking-tight">Row Weight:</span>
-                    <span className="font-bold text-primary md:text-foreground leading-none">
-                      {isNaN(rowTonnage) ? '0.000' : rowTonnage.toFixed(3)}
-                      <span className="md:hidden ml-1 text-[10px] font-sans font-medium text-muted-foreground">tonnes</span>
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-primary md:text-foreground leading-none">
+                        {isNaN(rowTonnage) ? '0.000' : rowTonnage.toFixed(3)}
+                        <span className="md:hidden ml-1 text-[10px] font-sans font-medium text-muted-foreground">tonnes</span>
+                      </span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 font-sans font-medium flex items-center gap-1">
+                        <Weight className="h-2.5 w-2.5" />
+                        {weightPerPcsInKg.toFixed(4)} kg/pcs
+                      </span>
+                    </div>
                   </div>
 
                   {/* Delete Button Desktop */}
