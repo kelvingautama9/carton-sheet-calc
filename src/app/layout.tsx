@@ -22,29 +22,34 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background">
+      <body className="font-body antialiased min-h-screen">
         <SidebarProvider>
-            <Sidebar className="border-r border-border/50 bg-card/30 backdrop-blur-lg">
+            <Sidebar className="border-r border-white/5 bg-black/40 backdrop-blur-2xl">
                 <SidebarContent>
-                    <SidebarHeader className="border-b border-border/50 p-2">
-                        <Link href="/" className="flex items-center gap-2">
-                            <Package2 className="h-8 w-8 text-primary" />
-                            <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                                VinnsCalc
-                            </h2>
+                    <SidebarHeader className="border-b border-white/5 p-6">
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform duration-500">
+                                <Package2 className="h-6 w-6 text-primary-foreground" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black tracking-tighter text-foreground leading-none">
+                                    VINNS<span className="text-primary italic">CALC</span>
+                                </h2>
+                                <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">Terminal v2.0</span>
+                            </div>
                         </Link>
                     </SidebarHeader>
-                    <div className="p-2">
+                    <div className="p-4">
                         <SidebarNav />
                     </div>
                 </SidebarContent>
             </Sidebar>
-            <SidebarInset>
-                <div className="flex flex-col flex-1 h-screen">
+            <SidebarInset className="bg-transparent">
+                <div className="flex flex-col flex-1 h-screen relative">
                     <Header />
-                    <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
+                    <main className="flex-1 p-4 md:p-8 lg:p-12 overflow-auto scrollbar-hide">
                         {children}
                     </main>
                 </div>
