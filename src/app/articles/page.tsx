@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function ArticlesPage() {
   return (
     <div className="animate-in fade-in duration-500">
-        <Card className="bg-card/50 backdrop-blur-sm">
+        <Card className="bg-card/50">
         <CardHeader>
             <CardTitle className="text-2xl">Articles</CardTitle>
             <CardDescription>

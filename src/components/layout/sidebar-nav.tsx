@@ -7,9 +7,9 @@ import { Home, Calculator, Table, Package, Weight } from 'lucide-react';
 const navItems = [
   { href: '/', label: 'DASHBOARD', icon: Home },
   { href: '/articles', label: 'DATASET', icon: Table },
-  { href: '/price-calculator', label: 'PRICE.TRM', icon: Calculator },
-  { href: '/moq-calculator', label: 'MOQ.TRM', icon: Package },
-  { href: '/tonnage-calculator', label: 'WEIGHT.TRM', icon: Weight },
+  { href: '/price-calculator', label: 'PRICE.CALC', icon: Calculator },
+  { href: '/moq-calculator', label: 'MOQ.CALC', icon: Package },
+  { href: '/tonnage-calculator', label: 'WEIGHT.CALC', icon: Weight },
 ];
 
 export function SidebarNav() {
@@ -30,9 +30,6 @@ export function SidebarNav() {
                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
             )}
           >
-            {isActive && (
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent" />
-            )}
             <item.icon className={cn(
               "h-5 w-5 transition-transform duration-500",
               isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary"

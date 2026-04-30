@@ -6,8 +6,7 @@ import { ArrowRight, Calculator, Package, Table, Weight, Zap } from 'lucide-reac
 export default function Home() {
   return (
     <div className="flex flex-col gap-12 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div className="relative group overflow-hidden rounded-[2rem] glass-panel p-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-blue-500/10 opacity-50" />
+      <div className="relative group overflow-hidden rounded-[2rem] p-1">
         <div className="relative z-10 p-8 md:p-16 flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase animate-pulse">
@@ -30,7 +29,7 @@ export default function Home() {
           
           <div className="hidden lg:block relative">
             <div className="w-64 h-64 rounded-full bg-primary/20 blur-[100px] absolute -inset-4 animate-pulse" />
-            <div className="relative glass-panel rounded-3xl p-6 w-72 h-72 flex items-center justify-center animate-float">
+            <div className="relative rounded-3xl p-6 w-72 h-72 flex items-center justify-center animate-float">
                 <Calculator className="w-32 h-32 text-primary drop-shadow-[0_0_15px_rgba(255,184,0,0.5)]" />
             </div>
           </div>
@@ -74,7 +73,7 @@ export default function Home() {
 function ToolCard({ href, icon: Icon, title, description, delay }: { href: string; icon: React.ElementType; title: string; description: string; delay: string; }) {
   return (
     <Link href={href} className={`group ${delay} animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both`}>
-        <Card className="h-full glass-panel group-hover:bg-white/5 transition-all duration-500 group-hover:-translate-y-2 group-hover:border-primary/40 overflow-hidden relative">
+        <Card className="h-full group-hover:bg-white/5 transition-all duration-500 group-hover:-translate-y-2 group-hover:border-primary/40 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/20 transition-all duration-500" />
             <CardHeader>
                 <div className="bg-primary/10 text-primary rounded-2xl p-4 w-fit group-hover:bg-primary group-hover:text-primary-foreground group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-primary/20">
