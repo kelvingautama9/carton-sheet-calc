@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Calculator, Table, Package, Weight } from 'lucide-react';
+import { Home, Calculator, Table, Package, Weight, Terminal } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'DASHBOARD', icon: Home },
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/price-calculator', label: 'PRICE.CALC', icon: Calculator },
   { href: '/moq-calculator', label: 'MOQ.CALC', icon: Package },
   { href: '/tonnage-calculator', label: 'WEIGHT.CALC', icon: Weight },
+  { href: '/god-mode', label: 'GOD.MODE', icon: Terminal },
 ];
 
 export function SidebarNav() {
