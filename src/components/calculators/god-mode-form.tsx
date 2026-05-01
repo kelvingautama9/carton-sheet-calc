@@ -35,7 +35,7 @@ export function GodModeForm() {
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        const price = calculatePrice(values) ?? 0;
+        const price = calculatePrice({ ...values, diskon: values.diskon ?? 0 }) ?? 0;
         const moq = calculateMOQ(values) ?? 0;
         const tonnage = calculateTonnage({ ...values, quantity: values.quantity || 0 }) ?? 0;
         
