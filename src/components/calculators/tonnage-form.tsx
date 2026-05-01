@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,11 +8,12 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, Weight } from 'lucide-react';
-import { calculateTonnage } from '@/lib/calculations';
+import { PlusCircle, Trash2, Weight, Copy } from 'lucide-react';
+import { calculateTonnage, calculateMOQ } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   rows: z.array(
@@ -28,6 +30,7 @@ const formSchema = z.object({
 const fluteOptions = ['B', 'C', 'BC'];
 
 export function TonnageCalculatorForm() {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,6 +47,24 @@ export function TonnageCalculatorForm() {
     control: form.control,
     name: 'rows',
   });
+
+  const handleCopyToClipboard = (index: number) => {
+    const row = watchedRows?.[index];
+    if (!row) return;
+
+    const weightPerPcsInKg = calculateTonnage({ ...row, quantity: 1 }) * 1000;
+    const rowMOQ = calculateMOQ(row);
+    const weightAtMOQ = calculateTonnage({ ...row, quantity: rowMOQ });
+
+    if (weightPerPcsInKg <= 0) return;
+
+    const text = `Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs
+Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} ton`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      toast({ description: 'Hasil perhitungan berhasil disalin!' });
+    });
+  };
 
   const totalTonnage = (watchedRows || []).reduce((acc, row) => {
     const tonnage = calculateTonnage({
@@ -89,7 +110,8 @@ export function TonnageCalculatorForm() {
                 quantity: Number(rowValues?.quantity) || 0,
               });
 
-              const weightPerPcsInKg = calculateTonnage({
+              const weightPerPcsInKg =
+                calculateTonnage({
                   panjang: Number(rowValues?.panjang) || 0,
                   lebar: Number(rowValues?.lebar) || 0,
                   substance: rowValues?.substance || '',
@@ -241,8 +263,10 @@ export function TonnageCalculatorForm() {
                     </div>
                   </div>
 
-                  {/* Delete Button Desktop */}
                   <div className="hidden md:flex items-center justify-end h-9">
+                    <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                      <Copy className="h-4 w-4" />
+                    </Button>
                     {fields.length > 1 && (
                       <Button
                         variant="ghost"
@@ -277,11 +301,37 @@ export function TonnageCalculatorForm() {
             <CardHeader className="pb-2">
               <CardTitle className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Total Tonnage</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex items-center justify-between">
               <p className="text-3xl font-black font-mono text-primary tracking-tighter">
                 {totalTonnage.toFixed(4)}
                 <span className="text-sm ml-2 font-sans font-bold text-muted-foreground/60 uppercase">tonnes</span>
               </p>
+               <Button
+                onClick={() => {
+                  const text = watchedRows.map((row, index) => {
+                    const rowTonnage = calculateTonnage({
+                      panjang: Number(row.panjang) || 0,
+                      lebar: Number(row.lebar) || 0,
+                      substance: row.substance || '',
+                      flute: row.flute || 'B',
+                      quantity: Number(row.quantity) || 0,
+                    });
+                    if (rowTonnage <= 0) return null;
+                    return `*Item ${index + 1}:* ${row.panjang}x${row.lebar}, ${row.substance} (${row.flute}), Qty: ${Number(row.quantity).toLocaleString()} -> *${rowTonnage.toFixed(3)} ton*`;
+                  }).filter(Boolean).join('\n');
+                  
+                  const fullText = `*Total Tonnage:*\n${text}\n\n*GRAND TOTAL: ${totalTonnage.toFixed(4)} tonnes*`;
+
+                  navigator.clipboard.writeText(fullText).then(() => {
+                    toast({ description: 'Total tonase berhasil disalin!' });
+                  });
+                }}
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 text-muted-foreground hover:text-primary"
+              >
+                <Copy className="h-5 w-5" />
+              </Button>
             </CardContent>
           </Card>
         </div>

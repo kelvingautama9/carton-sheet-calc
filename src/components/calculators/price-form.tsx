@@ -8,13 +8,14 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, Calculator, Weight, TrendingUp } from 'lucide-react';
+import { PlusCircle, Trash2, Calculator, Weight, TrendingUp, Copy } from 'lucide-react';
 import { calculatePrice, calculateMOQ, calculateTonnage } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   rows: z.array(
@@ -30,10 +31,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const currencyFormatter = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  minimumFractionDigits: 0,
+});
 const fluteOptions = ['B', 'C', 'BC'];
 
 export function PriceCalculatorForm() {
+  const { toast } = useToast();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,6 +81,29 @@ export function PriceCalculatorForm() {
         return newState;
       });
     }
+  };
+
+  const handleCopyToClipboard = (index: number) => {
+    const row = watchedRows[index];
+    if (!row) return;
+
+    const rowMOQ = calculateMOQ(row);
+    const rowPrice = calculatePrice({ ...row, diskon: row.diskon ?? 0 });
+    const weightPerPcsInKg = calculateTonnage({ ...row, quantity: 1 }) * 1000;
+
+    if (rowPrice === null) return;
+
+    const text = `${row.panjang}x${row.lebar} mm
+${row.substance} (${row.flute})
+MOQ = ${rowMOQ.toLocaleString()} pcs
+Harga = ${currencyFormatter.format(rowPrice)}
+Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        description: "Hasil perhitungan berhasil disalin!",
+      });
+    });
   };
 
   const grandTotal = Object.values(simulationData).reduce((acc, curr) => acc + curr.total, 0);
@@ -240,6 +269,9 @@ export function PriceCalculatorForm() {
                   </div>
 
                   <div className="hidden md:flex items-center justify-end">
+                     <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     {fields.length > 1 && (
                       <Button
                         variant="ghost"
@@ -333,7 +365,7 @@ export function PriceCalculatorForm() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 items-center">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-1">Total Weight</p>
                             <p className="font-mono text-foreground font-black text-base">
@@ -346,6 +378,11 @@ export function PriceCalculatorForm() {
                               {currencyFormatter.format(itemTotal)}
                             </p>
                           </div>
+                           <div className="col-span-2 flex justify-end">
+                              <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
                         </div>
                         {index < watchedRows.length - 1 && <Separator className="bg-white/5" />}
                       </div>

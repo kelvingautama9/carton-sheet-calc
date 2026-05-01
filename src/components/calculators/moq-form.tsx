@@ -1,14 +1,16 @@
 'use client';
 
+import * as React from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Copy } from 'lucide-react';
 import { calculateMOQ } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   rows: z.array(
@@ -20,6 +22,7 @@ const formSchema = z.object({
 });
 
 export function MoqCalculatorForm() {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,6 +39,24 @@ export function MoqCalculatorForm() {
     control: form.control,
     name: 'rows',
   });
+
+  const handleCopyToClipboard = (index: number) => {
+    const row = watchedRows?.[index];
+    if (!row) return;
+
+    const panjang = Number(row.panjang) || 0;
+    const lebar = Number(row.lebar) || 0;
+    const rowMOQ = panjang > 0 && lebar > 0 ? calculateMOQ({ panjang, lebar }) : 0;
+
+    if (rowMOQ <= 0) return;
+
+    const text = `${panjang}x${lebar} mm
+MOQ = ${rowMOQ.toLocaleString()} sheets`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      toast({ description: 'Hasil perhitungan berhasil disalin!' });
+    });
+  };
 
   const gridLayout = 'grid-cols-2 md:grid-cols-[1.5fr_1.5fr_1.5fr_48px]';
 
@@ -62,7 +83,7 @@ export function MoqCalculatorForm() {
                 <div
                   key={field.id}
                   className={cn(
-                    'relative grid gap-3 md:gap-4 items-start bg-accent/10 md:bg-transparent p-4 md:px-4 md:py-1 rounded-lg border md:border-none border-border/50',
+                    'relative grid gap-3 md:gap-4 items-center bg-accent/10 md:bg-transparent p-4 md:px-4 md:py-1 rounded-lg border md:border-none border-border/50',
                     gridLayout
                   )}
                 >
@@ -127,6 +148,9 @@ export function MoqCalculatorForm() {
 
                   {/* Delete Button Desktop */}
                   <div className="hidden md:flex items-center justify-end h-9">
+                     <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     {fields.length > 1 && (
                       <Button
                         variant="ghost"
