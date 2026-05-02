@@ -30,7 +30,7 @@ export default function RootLayout({
                 <SidebarContent>
                     <SidebarHeader className="border-b border-white/5 p-6">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform duration-500">
+                            <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform duration-500 animate-float">
                                 <Package2 className="h-6 w-6 text-primary-foreground" />
                             </div>
                             <div>
@@ -50,7 +50,9 @@ export default function RootLayout({
                 <div className="flex flex-col flex-1 h-screen relative">
                     <Header />
                     <main className="flex-1 p-4 md:p-8 lg:p-12 overflow-auto scrollbar-hide">
-                        {children}
+                       <div className="animate-slide-in-from-bottom">
+                          {children}
+                        </div>
                     </main>
                 </div>
             </SidebarInset>

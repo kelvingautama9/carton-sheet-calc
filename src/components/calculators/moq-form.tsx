@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Copy } from 'lucide-react';
+import { PlusCircle, Trash2, Copy, ClipboardCopy } from 'lucide-react';
 import { calculateMOQ } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -50,11 +50,42 @@ export function MoqCalculatorForm() {
 
     if (rowMOQ <= 0) return;
 
-    const text = `${panjang}x${lebar} mm
-MOQ = ${rowMOQ.toLocaleString()} sheets`;
+    const text = `${panjang}x${lebar} mm\nMOQ = ${rowMOQ.toLocaleString()} sheets`;
 
     navigator.clipboard.writeText(text).then(() => {
       toast({ description: 'Hasil perhitungan berhasil disalin!' });
+    });
+  };
+
+  const handleCopyAllToClipboard = () => {
+    if (!watchedRows || watchedRows.length === 0) return;
+
+    const allText = watchedRows
+      .map(row => {
+        const panjang = Number(row.panjang) || 0;
+        const lebar = Number(row.lebar) || 0;
+        if (panjang <= 0 || lebar <= 0) {
+          return null;
+        }
+        const rowMOQ = calculateMOQ({ panjang, lebar });
+        return `${panjang}x${lebar} mm\nMOQ = ${rowMOQ.toLocaleString()} sheets`;
+      })
+      .filter(Boolean)
+      .join('\n\n---\n\n');
+
+    if (!allText) {
+      toast({
+        variant: "destructive",
+        description: "Tidak ada data valid untuk disalin.",
+      });
+      return;
+    }
+
+    navigator.clipboard.writeText(allText).then(() => {
+      toast({
+        title: "Semua Hasil Disalin!",
+        description: "Semua hasil perhitungan MOQ telah disalin.",
+      });
     });
   };
 
@@ -90,7 +121,7 @@ MOQ = ${rowMOQ.toLocaleString()} sheets`;
                   {/* Delete button Mobile */}
                   <div className="absolute top-2 right-2 md:hidden">
                     {fields.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
@@ -148,11 +179,12 @@ MOQ = ${rowMOQ.toLocaleString()} sheets`;
 
                   {/* Delete Button Desktop */}
                   <div className="hidden md:flex items-center justify-end h-9">
-                     <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                     <Button type="button" onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                         <Copy className="h-4 w-4" />
                       </Button>
                     {fields.length > 1 && (
                       <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -167,15 +199,25 @@ MOQ = ${rowMOQ.toLocaleString()} sheets`;
             })}
           </div>
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full sm:w-auto border-dashed hover:border-primary/50"
-          onClick={() => append({ panjang: 0, lebar: 0 })}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full sm:w-auto border-dashed hover:border-primary/50"
+            onClick={() => append({ panjang: 0, lebar: 0 })}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Row
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            className="w-full sm:w-auto"
+            onClick={handleCopyAllToClipboard}
+            disabled={!watchedRows || watchedRows.length === 0}
+          >
+            <ClipboardCopy className="mr-2 h-4 w-4" /> Copy All
+          </Button>
+        </div>
       </form>
     </Form>
   );

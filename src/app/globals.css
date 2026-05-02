@@ -48,12 +48,3 @@
   @apply bg-black/40 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-300;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}

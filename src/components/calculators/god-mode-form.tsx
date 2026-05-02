@@ -9,6 +9,8 @@ import { fluteOptions } from '@/data/select-options';
 import { calculatePrice, calculateMOQ, calculateTonnage, calculateGrammage } from "@/lib/calculations";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { ClipboardCopy } from "lucide-react";
 
 const formSchema = z.object({
     panjang: z.number().min(1, "Panjang harus lebih dari 0"),
@@ -19,7 +21,14 @@ const formSchema = z.object({
     quantity: z.number().min(1, "Quantity harus lebih dari 0"),
 });
 
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  minimumFractionDigits: 0,
+});
+
 export function GodModeForm() {
+    const { toast } = useToast();
     const [results, setResults] = useState({ price: 0, moq: 0, tonnage: 0, weightPerPcs: 0 });
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -46,6 +55,23 @@ export function GodModeForm() {
         setResults({ price, moq, tonnage, weightPerPcs });
     }
 
+    const handleCopyAll = () => {
+        const { price, moq, tonnage, weightPerPcs } = results;
+        if (price === 0 && moq === 0 && tonnage === 0 && weightPerPcs === 0) {
+            toast({ variant: "destructive", description: "Tidak ada data untuk disalin." });
+            return;
+        }
+
+        const text = `Price: ${currencyFormatter.format(price)}\nMOQ: ${moq.toLocaleString()} pcs\nWeight: ${tonnage.toFixed(3)} tons\nWeight/pcs: ${weightPerPcs.toFixed(2)} g`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            toast({ 
+                title: "Hasil Disalin!",
+                description: "Semua hasil kalkulasi God Mode telah disalin.",
+            });
+        });
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Form {...form}>
@@ -60,30 +86,33 @@ export function GodModeForm() {
                         <FormField control={form.control} name="diskon" render={({ field }) => (<FormItem><FormLabel>Diskon (%)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bloomberg-input" onFocus={e => e.target.select()} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="quantity" render={({ field }) => (<FormItem><FormLabel>Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bloomberg-input" onFocus={e => e.target.select()} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} /></FormControl><FormMessage /></FormItem>)} />
                     </div>
-                    <Button type="submit" className="w-full">Calculate</Button>
+                    <Button type="submit" className="w-full h-12 text-lg font-black tracking-widest">Calculate</Button>
                 </form>
             </Form>
 
             <Card className="bg-black/20 border-border/30">
-                <CardContent className="p-6">
+                <CardContent className="p-6 space-y-6">
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Price</span>
-                            <span className="text-2xl font-bold">Rp {results.price.toLocaleString()}</span>
+                            <span className="text-2xl font-bold text-primary">{currencyFormatter.format(results.price)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">MOQ</span>
-                            <span className="text-2xl font-bold">{results.moq.toLocaleString()} pcs</span>
+                            <span className="text-2xl font-bold text-primary">{results.moq.toLocaleString()} pcs</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Weight</span>
-                            <span className="text-2xl font-bold">{results.tonnage.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tons</span>
+                            <span className="text-2xl font-bold text-primary">{results.tonnage.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tons</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Weight/pcs</span>
-                            <span className="text-2xl font-bold">{results.weightPerPcs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} g</span>
+                            <span className="text-2xl font-bold text-primary">{results.weightPerPcs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} g</span>
                         </div>
                     </div>
+                    <Button type="button" variant="outline" className="w-full border-dashed hover:border-primary/50" onClick={handleCopyAll}>
+                        <ClipboardCopy className="mr-2 h-4 w-4"/> Copy All Results
+                    </Button>
                 </CardContent>
             </Card>
         </div>

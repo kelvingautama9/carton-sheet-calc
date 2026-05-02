@@ -31,10 +31,7 @@ export function SidebarNav() {
                 : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
             )}
           >
-            <item.icon className={cn(
-              "h-5 w-5 transition-transform duration-500",
-              isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary"
-            )} />
+            <item.icon className="h-5 w-5" />
             <span className="tracking-[0.1em]">{item.label}</span>
           </Link>
         );

@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, Weight, Copy } from 'lucide-react';
+import { PlusCircle, Trash2, Weight, Copy, ClipboardCopy } from 'lucide-react';
 import { calculateTonnage, calculateMOQ } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -58,11 +58,34 @@ export function TonnageCalculatorForm() {
 
     if (weightPerPcsInKg <= 0) return;
 
-    const text = `Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs
-Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} ton`;
+    const text = `Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs\nBerat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} ton`;
 
     navigator.clipboard.writeText(text).then(() => {
       toast({ description: 'Hasil perhitungan berhasil disalin!' });
+    });
+  };
+
+  const handleCopyAllToClipboard = () => {
+    const text = watchedRows.map((row, index) => {
+      const rowTonnage = calculateTonnage({
+        panjang: Number(row.panjang) || 0,
+        lebar: Number(row.lebar) || 0,
+        substance: row.substance || '',
+        flute: row.flute || 'B',
+        quantity: Number(row.quantity) || 0,
+      });
+      if (rowTonnage <= 0) return null;
+      return `*Item ${index + 1}:* ${row.panjang}x${row.lebar}, ${row.substance} (${row.flute}), Qty: ${Number(row.quantity).toLocaleString()} -> *${rowTonnage.toFixed(3)} ton*`;
+    }).filter(Boolean).join('\n');
+    
+    const totalTonnageVal = totalTonnage;
+    const fullText = `*Total Tonnage:*\n${text}\n\n*GRAND TOTAL: ${totalTonnageVal.toFixed(4)} tonnes*`;
+
+    navigator.clipboard.writeText(fullText).then(() => {
+      toast({ 
+        title: "Semua Hasil Disalin!",
+        description: "Semua hasil perhitungan berat telah disalin.",
+       });
     });
   };
 
@@ -130,7 +153,7 @@ Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} to
                   {/* Delete button Mobile */}
                   <div className="absolute top-2 right-2 md:hidden">
                     {fields.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
@@ -264,11 +287,12 @@ Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} to
                   </div>
 
                   <div className="hidden md:flex items-center justify-end h-9">
-                    <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Button type="button" onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                       <Copy className="h-4 w-4" />
                     </Button>
                     {fields.length > 1 && (
                       <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -284,14 +308,25 @@ Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} to
           </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full sm:w-auto border-dashed hover:border-primary/50"
-          onClick={() => append({ panjang: 0, lebar: 0, substance: 'M100/M100/M100', flute: 'B', quantity: 0 })}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto border-dashed hover:border-primary/50"
+              onClick={() => append({ panjang: 0, lebar: 0, substance: 'M100/M100/M100', flute: 'B', quantity: 0 })}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              className="w-full sm:w-auto"
+              onClick={handleCopyAllToClipboard}
+              disabled={!watchedRows || watchedRows.length === 0}
+            >
+              <ClipboardCopy className="mr-2 h-4 w-4" /> Copy All
+            </Button>
+        </div>
 
         <Separator />
 
@@ -307,25 +342,8 @@ Berat sesuai MOQ (${rowMOQ.toLocaleString()} pcs) = ${weightAtMOQ.toFixed(3)} to
                 <span className="text-sm ml-2 font-sans font-bold text-muted-foreground/60 uppercase">tonnes</span>
               </p>
                <Button
-                onClick={() => {
-                  const text = watchedRows.map((row, index) => {
-                    const rowTonnage = calculateTonnage({
-                      panjang: Number(row.panjang) || 0,
-                      lebar: Number(row.lebar) || 0,
-                      substance: row.substance || '',
-                      flute: row.flute || 'B',
-                      quantity: Number(row.quantity) || 0,
-                    });
-                    if (rowTonnage <= 0) return null;
-                    return `*Item ${index + 1}:* ${row.panjang}x${row.lebar}, ${row.substance} (${row.flute}), Qty: ${Number(row.quantity).toLocaleString()} -> *${rowTonnage.toFixed(3)} ton*`;
-                  }).filter(Boolean).join('\n');
-                  
-                  const fullText = `*Total Tonnage:*\n${text}\n\n*GRAND TOTAL: ${totalTonnage.toFixed(4)} tonnes*`;
-
-                  navigator.clipboard.writeText(fullText).then(() => {
-                    toast({ description: 'Total tonase berhasil disalin!' });
-                  });
-                }}
+                type="button"
+                onClick={handleCopyAllToClipboard}
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 text-muted-foreground hover:text-primary"

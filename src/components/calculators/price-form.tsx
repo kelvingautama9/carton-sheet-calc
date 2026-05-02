@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, Calculator, Weight, TrendingUp, Copy } from 'lucide-react';
+import { PlusCircle, Trash2, Calculator, Weight, TrendingUp, Copy, ClipboardCopy } from 'lucide-react';
 import { calculatePrice, calculateMOQ, calculateTonnage } from '@/lib/calculations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -93,11 +93,7 @@ export function PriceCalculatorForm() {
 
     if (rowPrice === null) return;
 
-    const text = `${row.panjang}x${row.lebar} mm
-${row.substance} (${row.flute})
-MOQ = ${rowMOQ.toLocaleString()} pcs
-Harga = ${currencyFormatter.format(rowPrice)}
-Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
+    const text = `${row.panjang}x${row.lebar} mm\n${row.substance} (${row.flute})\nMOQ = ${rowMOQ.toLocaleString()} pcs\nHarga = ${currencyFormatter.format(rowPrice)}\nBerat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
 
     navigator.clipboard.writeText(text).then(() => {
       toast({
@@ -105,6 +101,52 @@ Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
       });
     });
   };
+
+  const handleCopyAllToClipboard = () => {
+    let allText = '';
+    watchedRows.forEach((row, index) => {
+        if (index > 0) {
+            allText += '\n----------\n';
+        }
+        const rowMOQ = calculateMOQ(row);
+        const rowPrice = calculatePrice({ ...row, diskon: row.diskon ?? 0 });
+        const weightPerPcsInKg = calculateTonnage({ ...row, quantity: 1 }) * 1000;
+
+        if (rowPrice === null) return;
+
+        allText += `${row.panjang}x${row.lebar} mm\n`;
+        allText += `${row.substance} (${row.flute})\n`;
+        allText += `MOQ = ${rowMOQ.toLocaleString()} pcs\n`;
+        allText += `Harga = ${currencyFormatter.format(rowPrice)}\n`;
+        allText += `Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
+
+        const simData = simulationData[index];
+        if (simData && simData.qty > 0) {
+            allText += `\n---\n`;
+            allText += `Qty: ${simData.qty.toLocaleString()} pcs\n`;
+            allText += `Subtotal: ${currencyFormatter.format(simData.total)}\n`;
+            allText += `Total Berat: ${simData.totalWeight.toFixed(3)} TONS`;
+        }
+    });
+
+    const grandTotal = Object.values(simulationData).reduce((acc, curr) => acc + curr.total, 0);
+    const grandTotalWeight = Object.values(simulationData).reduce((acc, curr) => acc + curr.totalWeight, 0);
+
+    if (grandTotal > 0) {
+        allText += `\n\n==========\n`;
+        allText += `GRAND TOTAL: ${currencyFormatter.format(grandTotal)}\n`;
+        allText += `TOTAL BERAT: ${grandTotalWeight.toFixed(4)} TONS`;
+    }
+
+
+    navigator.clipboard.writeText(allText).then(() => {
+      toast({
+        title: "Semua Hasil Disalin!",
+        description: "Semua hasil perhitungan telah berhasil disalin ke clipboard.",
+      });
+    });
+  };
+
 
   const grandTotal = Object.values(simulationData).reduce((acc, curr) => acc + curr.total, 0);
   const grandTotalWeight = Object.values(simulationData).reduce((acc, curr) => acc + curr.totalWeight, 0);
@@ -147,7 +189,7 @@ Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
                 >
                   <div className="absolute top-3 right-3 md:hidden">
                     {fields.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
@@ -269,11 +311,12 @@ Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
                   </div>
 
                   <div className="hidden md:flex items-center justify-end">
-                     <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                     <Button type="button" onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                         <Copy className="h-4 w-4" />
                       </Button>
                     {fields.length > 1 && (
                       <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-xl"
@@ -307,6 +350,17 @@ Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
             <Calculator className="mr-2 h-5 w-5" />
             {isSimulating ? 'Hide Analysis' : 'Run Calculation'}
           </Button>
+          {isSimulating && (
+             <Button
+                type="button"
+                variant="default"
+                className="h-12 w-full sm:w-auto font-black uppercase tracking-widest bg-primary/90 hover:bg-primary transition-all shadow-xl"
+                onClick={handleCopyAllToClipboard}
+              >
+                <ClipboardCopy className="mr-2 h-5 w-5" />
+                Copy All
+              </Button>
+          )}
         </div>
 
         <Separator className="bg-white/5" />
@@ -379,7 +433,7 @@ Berat/pcs = ${weightPerPcsInKg.toFixed(4)} kg/pcs`;
                             </p>
                           </div>
                            <div className="col-span-2 flex justify-end">
-                              <Button onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                              <Button type="button" onClick={() => handleCopyToClipboard(index)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                                 <Copy className="h-4 w-4" />
                               </Button>
                             </div>
